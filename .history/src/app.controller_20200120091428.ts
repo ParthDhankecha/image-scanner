@@ -45,7 +45,7 @@ export class AppController {
     // console.log("Text:");
     // detections.forEach(text => console.log(text));
 
-    /** Node Tesseract code */
+
 
     const tesseract = require("node-tesseract-ocr")
 
@@ -55,7 +55,7 @@ export class AppController {
       psm: 3,
     }
 
-    tesseract.recognize(join(__dirname, "..", "/avatars/" + file.filename), config)
+    tesseract.recognize("image.jpg", config)
       .then(text => {
         console.log("Result:", text)
       })
