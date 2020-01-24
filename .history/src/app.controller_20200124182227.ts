@@ -58,6 +58,6 @@ export class AppController {
 
     // let text = await tesseract.recognize(join(__dirname, "..", "/avatars/" + file.filename), config)
 
-    return { status: 1, message: "Image uploaded successfully.", data: detections };
+    return { status: 1, message: "Image uploaded successfully." };
   }
 }

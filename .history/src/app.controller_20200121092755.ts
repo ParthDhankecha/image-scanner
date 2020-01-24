@@ -35,29 +35,29 @@ export class AppController {
     })
   )
   async uploadFile(@UploadedFile() file) {
-    console.log(file);
-    const vision = require("@google-cloud/vision");
-    const client = new vision.ImageAnnotatorClient();
-    const [result] = await client.textDetection(
-      join(__dirname, "..", "/avatars/" + file.filename)
-    );
-    const detections = result.textAnnotations;
-    console.log("Text:");
-    detections.forEach(text => console.log(text));
+    // console.log(file);
+    // const vision = require("@google-cloud/vision");
+    // const client = new vision.ImageAnnotatorClient();
+    // const [result] = await client.textDetection(
+    //   join(__dirname, "..", "/avatars/" + file.filename)
+    // );
+    // const detections = result.textAnnotations;
+    // console.log("Text:");
+    // detections.forEach(text => console.log(text));
 
-    // /** Node Tesseract code */
+    /** Node Tesseract code */
 
-    // const tesseract = require("node-tesseract-ocr")
+    const tesseract = require("node-tesseract-ocr")
 
-    // const config = {
-    //   lang: "eng",
-    //   oem: 1,
-    //   psm: 3,
-    //   json: 1
-    // }
+    const config = {
+      lang: "eng",
+      oem: 1,
+      psm: 3,
+      json: 1
+    }
 
-    // let text = await tesseract.recognize(join(__dirname, "..", "/avatars/" + file.filename), config)
+    let text = await tesseract.recognize(join(__dirname, "..", "/avatars/" + file.filename), config)
 
-    return { status: 1, message: "Image uploaded successfully.", data: detections };
+    return { status: 1, message: "Image uploaded successfully.", data: text };
   }
 }
