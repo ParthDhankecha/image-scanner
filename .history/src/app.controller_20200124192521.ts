@@ -3,8 +3,7 @@ import {
   Get,
   Post,
   UseInterceptors,
-  UploadedFile,
-  Body
+  UploadedFile
 } from "@nestjs/common";
 import { AppService } from "./app.service";
 import { FileInterceptor } from "@nestjs/platform-express";
@@ -71,11 +70,5 @@ export class AppController {
     // let text = await tesseract.recognize(join(__dirname, "..", "/avatars/" + file.filename), config)
 
     return { status: 1, message: "Image uploaded successfully.", data: detections };
-  }
-
-
-  @Post('compare-json')
-  compareJSON(@Body() data) {
-
   }
 }
