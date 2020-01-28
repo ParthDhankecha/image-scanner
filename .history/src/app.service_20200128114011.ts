@@ -112,9 +112,10 @@ export class AppService {
     const client = new vision.ImageAnnotatorClient();
     const [result] = await client.textDetection(
       //join(__dirname, "..", "/avatars/" + file.filename)
-      fileUri
+      filename
     );
     const detections = result.textAnnotations;
-    return detections;
+    console.log("Text:");
+    detections.forEach(text => console.log(text));
   }
 }

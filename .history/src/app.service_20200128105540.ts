@@ -57,7 +57,6 @@ export class AppService {
 
   public compareJSON(detectedJson, index) {
     let jsonToCompare = this.comparableJson[index];
-    this.writeToFile("******************************************************************\n\nFile Name :-  File  " + index + "\n\n******************************************************************\n", 'mismatch.txt');
     for (let key in jsonToCompare) {
       let value = "";
       let actualValue: string = jsonToCompare[key];
@@ -68,6 +67,7 @@ export class AppService {
         console.log(key)
         continue;
       }
+
 
       let indexToDelete = [];
       for (let i = 0; i < detectedJson.length; i++) {
@@ -84,14 +84,16 @@ export class AppService {
         }
       }
       if (value != actualValue) {
-        let str = "\n";
+        let str = "=========================================================\n";
         str += "key   =>    " + key + "\n";
         str += "Actual Value =>  " + actualValue + "\n";
         str += "Detected Value   =>   " + value + "\n";
         str += "==========================================================\n";
-        // if (key != "residentVC") {
-        this.writeToFile(str, 'mismatch.txt');
-        // }
+        if (key != "residentVC") {
+          fs.writeFile(join(__dirname, '../avatars/mismatch.txt'), str, (err) => {
+            console.log(err);
+          });
+        }
         console.log(str);
       } else {
         for (let index of indexToDelete) {
@@ -99,22 +101,5 @@ export class AppService {
         }
       }
     }
-  }
-
-  private writeToFile(str, filename) {
-    fs.appendFile(join(__dirname, '../avatars/' + filename), str, (err) => {
-      console.log(err);
-    });
-  }
-
-  async detectText(fileUri) {
-    const vision = require("@google-cloud/vision");
-    const client = new vision.ImageAnnotatorClient();
-    const [result] = await client.textDetection(
-      //join(__dirname, "..", "/avatars/" + file.filename)
-      fileUri
-    );
-    const detections = result.textAnnotations;
-    return detections;
   }
 }

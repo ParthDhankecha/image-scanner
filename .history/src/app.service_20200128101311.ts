@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import * as fs from 'fs';
-import { join } from 'path';
 
 @Injectable()
 export class AppService {
@@ -30,7 +28,7 @@ export class AppService {
     "orderNo": [1390, 1510, 1360, 1770],
     "orderType": [104, 1120, 1355, 1150],
     "drugRecordName": [104, 1321, 290, 1355],
-    "drugRecordDateTime": [340, 1320, 510, 1355],
+    "drugRecordDateTime": [340, 1330, 510, 1355],
     "consentName": [515, 1320, 750, 1345],
     "consentDateTime": [760, 1325, 920, 1345],
     "eBoxName": [930, 1320, 1150, 1350],
@@ -57,64 +55,36 @@ export class AppService {
 
   public compareJSON(detectedJson, index) {
     let jsonToCompare = this.comparableJson[index];
-    this.writeToFile("******************************************************************\n\nFile Name :-  File  " + index + "\n\n******************************************************************\n", 'mismatch.txt');
     for (let key in jsonToCompare) {
       let value = "";
       let actualValue: string = jsonToCompare[key];
-
-      // actualValue = actualValue.replace(' ', "");
+      //actualValue = actualValue.replace('/s', "");
       let actualPoints = this.plottingPoints[key];
       if (!actualPoints) {
-        console.log(key)
         continue;
       }
-
-      let indexToDelete = [];
       for (let i = 0; i < detectedJson.length; i++) {
         let points = detectedJson[i].boundingPoly.vertices;
         if (points[0].x >= actualPoints[0] && points[0].y >= actualPoints[1] && points[2].x <= actualPoints[2] && points[2].y <= actualPoints[3]) {
           value = value + detectedJson[i].description;
-          value = value.replace("|", "");
-          indexToDelete.push(i);
           if (value == actualValue) {
             break;
           } else {
             value = value + " ";
           }
         }
+        // if (value == actualValue) {
+        //   break;
+        // } 
       }
       if (value != actualValue) {
-        let str = "\n";
-        str += "key   =>    " + key + "\n";
-        str += "Actual Value =>  " + actualValue + "\n";
-        str += "Detected Value   =>   " + value + "\n";
-        str += "==========================================================\n";
-        // if (key != "residentVC") {
-        this.writeToFile(str, 'mismatch.txt');
-        // }
-        console.log(str);
-      } else {
-        for (let index of indexToDelete) {
-          //detectedJson.splice(index, 1);
-        }
+        console.log("=========================================================");
+        console.log("key   =>  " + key);
+        console.log("Actual Value =>  " + actualValue);
+        console.log("Detected Value   =>   " + value);
+        console.log("==========================================================");
+        console.log("\n")
       }
     }
-  }
-
-  private writeToFile(str, filename) {
-    fs.appendFile(join(__dirname, '../avatars/' + filename), str, (err) => {
-      console.log(err);
-    });
-  }
-
-  async detectText(fileUri) {
-    const vision = require("@google-cloud/vision");
-    const client = new vision.ImageAnnotatorClient();
-    const [result] = await client.textDetection(
-      //join(__dirname, "..", "/avatars/" + file.filename)
-      fileUri
-    );
-    const detections = result.textAnnotations;
-    return detections;
   }
 }

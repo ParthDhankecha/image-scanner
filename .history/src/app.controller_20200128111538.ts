@@ -52,7 +52,7 @@ export class AppController {
     const client = new vision.ImageAnnotatorClient();
     const [result] = await client.textDetection(
       //join(__dirname, "..", "/avatars/" + file.filename)
-      'https://cloud.google.com/vision/docs/images/sign_text.png'
+      'gs://cloud.google.com/vision/docs/images/sign_text.png'
     );
     const detections = result.textAnnotations;
     console.log("Text:");
@@ -76,8 +76,8 @@ export class AppController {
 
 
   @Post('compare-json')
-  async compareJSON(@Body() data) {
-    let detectedJson = await this.appService.detectText(data.url);
-    this.appService.compareJSON(detectedJson, 0)
+  compareJSON(@Body() data) {
+
+    this.appService.compareJSON(data, 0)
   }
 }

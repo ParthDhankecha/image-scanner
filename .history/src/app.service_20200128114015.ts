@@ -115,6 +115,7 @@ export class AppService {
       fileUri
     );
     const detections = result.textAnnotations;
-    return detections;
+    console.log("Text:");
+    detections.forEach(text => console.log(text));
   }
 }

@@ -78,6 +78,6 @@ export class AppController {
   @Post('compare-json')
   async compareJSON(@Body() data) {
     let detectedJson = await this.appService.detectText(data.url);
-    this.appService.compareJSON(detectedJson, 0)
+    this.appService.compareJSON(data, 0)
   }
 }

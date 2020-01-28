@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import * as fs from 'fs';
-import { join } from 'path';
 
 @Injectable()
 export class AppService {
@@ -11,26 +9,26 @@ export class AppService {
   public plottingPoints = {
     "homeName": [970, 20, 1260, 45],
     "homePhone": [979, 74, 1115, 90],
-    "homeFax": [970, 120, 1120, 145],
-    "pharmacyPhone": [420, 70, 560, 92],
-    "pharmacyFax": [420, 120, 562, 140],
-    "homeAreaName": [595, 365, 780, 407],
-    "residentName": [100, 295, 590, 340],
-    "prescriberName": [595, 290, 1085, 338],
+    "homeFax": [979, 123, 1115, 139],
+    "pharmacyPhone": [420, 80, 555, 85],
+    "pharmacyFax": [420, 125, 555, 140],
+    "homeAreaName": [600, 368, 775, 405],
+    "residentName": [100, 300, 590, 340],
+    "prescriberName": [600, 290, 1085, 300],
     "unit": [600, 365, 840, 405],
     "room": [845, 365, 1110, 405],
-    "allergies": [110, 435, 1300, 480],
+    "allergies": [110, 435, 1300, 470],
     "prescriberLicense": [960, 1156, 1300, 1210],
-    "residentDOB": [1095, 290, 1300, 338],
+    "residentDOB": [1095, 300, 1300, 335],
     "residentVC": [350, 370, 590, 405],
-    "residentHC": [100, 360, 350, 408],
-    "currentDate": [100, 500, 340, 540],
+    "residentHC": [104, 370, 350, 405],
+    "currentDate": [104, 505, 340, 540],
     "currentTime": [350, 505, 830, 540],
     "status": [104, 720, 1335, 1025],
-    "orderNo": [1390, 1510, 1360, 1770],
+    "orderNo": [1390, 1520, 1354, 1762],
     "orderType": [104, 1120, 1355, 1150],
     "drugRecordName": [104, 1321, 290, 1355],
-    "drugRecordDateTime": [340, 1320, 510, 1355],
+    "drugRecordDateTime": [340, 1330, 510, 1355],
     "consentName": [515, 1320, 750, 1345],
     "consentDateTime": [760, 1325, 920, 1345],
     "eBoxName": [930, 1320, 1150, 1350],
@@ -57,64 +55,31 @@ export class AppService {
 
   public compareJSON(detectedJson, index) {
     let jsonToCompare = this.comparableJson[index];
-    this.writeToFile("******************************************************************\n\nFile Name :-  File  " + index + "\n\n******************************************************************\n", 'mismatch.txt');
     for (let key in jsonToCompare) {
       let value = "";
       let actualValue: string = jsonToCompare[key];
-
-      // actualValue = actualValue.replace(' ', "");
+      actualValue = actualValue.replace("\s", "");
       let actualPoints = this.plottingPoints[key];
       if (!actualPoints) {
-        console.log(key)
         continue;
       }
-
-      let indexToDelete = [];
       for (let i = 0; i < detectedJson.length; i++) {
         let points = detectedJson[i].boundingPoly.vertices;
         if (points[0].x >= actualPoints[0] && points[0].y >= actualPoints[1] && points[2].x <= actualPoints[2] && points[2].y <= actualPoints[3]) {
           value = value + detectedJson[i].description;
-          value = value.replace("|", "");
-          indexToDelete.push(i);
-          if (value == actualValue) {
-            break;
-          } else {
-            value = value + " ";
-          }
+        }
+        if (value == actualValue) {
+          break;
         }
       }
       if (value != actualValue) {
-        let str = "\n";
-        str += "key   =>    " + key + "\n";
-        str += "Actual Value =>  " + actualValue + "\n";
-        str += "Detected Value   =>   " + value + "\n";
-        str += "==========================================================\n";
-        // if (key != "residentVC") {
-        this.writeToFile(str, 'mismatch.txt');
-        // }
-        console.log(str);
-      } else {
-        for (let index of indexToDelete) {
-          //detectedJson.splice(index, 1);
-        }
+        console.log("=========================================================");
+        console.log("key   =>  " + key);
+        console.log("Actual Value =>  " + actualValue);
+        console.log("Detected Value   =>   " + value);
+        console.log("==========================================================");
+        console.log("\n")
       }
     }
-  }
-
-  private writeToFile(str, filename) {
-    fs.appendFile(join(__dirname, '../avatars/' + filename), str, (err) => {
-      console.log(err);
-    });
-  }
-
-  async detectText(fileUri) {
-    const vision = require("@google-cloud/vision");
-    const client = new vision.ImageAnnotatorClient();
-    const [result] = await client.textDetection(
-      //join(__dirname, "..", "/avatars/" + file.filename)
-      fileUri
-    );
-    const detections = result.textAnnotations;
-    return detections;
   }
 }

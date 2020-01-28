@@ -106,15 +106,4 @@ export class AppService {
       console.log(err);
     });
   }
-
-  async detectText(fileUri) {
-    const vision = require("@google-cloud/vision");
-    const client = new vision.ImageAnnotatorClient();
-    const [result] = await client.textDetection(
-      //join(__dirname, "..", "/avatars/" + file.filename)
-      fileUri
-    );
-    const detections = result.textAnnotations;
-    return detections;
-  }
 }
