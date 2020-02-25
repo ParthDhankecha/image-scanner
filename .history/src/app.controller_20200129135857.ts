@@ -3,7 +3,8 @@ import {
   Get,
   Post,
   UseInterceptors,
-  UploadedFile
+  UploadedFile,
+  Body
 } from "@nestjs/common";
 import { AppService } from "./app.service";
 import { FileInterceptor } from "@nestjs/platform-express";
@@ -18,6 +19,17 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+
+  /**
+   * 
+   * @param file 
+   * 
+   * For Default Login :- 'gcloud auth application-default login'
+   * 
+   * Install google cloud shell and gcloud init
+   * 
+   * export google credential variable values then restart server and terminal
+   */
 
   @Post()
   @UseInterceptors(
@@ -39,13 +51,14 @@ export class AppController {
     const vision = require("@google-cloud/vision");
     const client = new vision.ImageAnnotatorClient();
     const [result] = await client.textDetection(
-      join(__dirname, "..", "/avatars/" + file.filename)
+      //join(__dirname, "..", "/avatars/" + file.filename)
+      'https://cloud.google.com/vision/docs/images/sign_text.png'
     );
     const detections = result.textAnnotations;
     console.log("Text:");
     detections.forEach(text => console.log(text));
 
-    /** Node Tesseract code */
+    // /** Node Tesseract code */
 
     // const tesseract = require("node-tesseract-ocr")
 
@@ -53,15 +66,18 @@ export class AppController {
     //   lang: "eng",
     //   oem: 1,
     //   psm: 3,
+    //   json: 1
     // }
 
-    // tesseract.recognize(join(__dirname, "..", "/avatars/" + file.filename), config)
-    //   .then(text => {
-    //     console.log("Result:", text)
-    //   })
-    //   .catch(error => {
-    //     console.log(error.message)
-    //   })
-    // return { status: 1, message: "Image uploaded successfully." };
+    // let text = await tesseract.recognize(join(__dirname, "..", "/avatars/" + file.filename), config)
+
+    return { status: 1, message: "Image uploaded successfully.", data: detections };
+  }
+
+
+  @Post('compare-json')
+  async compareJSON(@Body() data) {
+    let detectedJson = await this.appService.detectText(data.url);
+    this.appService.compareJSON(detectedJson, data.compareJSON);
   }
 }
