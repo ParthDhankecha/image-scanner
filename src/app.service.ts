@@ -8,7 +8,7 @@ export class AppService {
     return 'Hello World!';
   }
 
-  public plottingPoints = {
+  public plottingPoints1 = {
     "homeName": [970, 20, 1260, 45],
     "homePhone": [979, 74, 1115, 90],
     "homeFax": [970, 120, 1120, 145],
@@ -44,6 +44,189 @@ export class AppService {
     "2ndCheckDateTime": [340, 1390, 510, 1420],
     "2ndCheckName": [110, 1390, 335, 1420]
   };
+
+  public plottingPoints = {
+    line1: {
+      "centerNo": {
+        search: "",
+        start: 250,
+        end: 430,
+        line: 1
+      },
+      "schoolId": {
+        search: "",
+        start: 410,
+        end: 653,
+        line: 1
+      },
+      "regNo": {
+        search: "",
+        start: 633,
+        end: 906,
+        line: 1
+      },
+      name: {
+        search: "",
+        start: 854,
+        end: 2173,
+        line: 1
+      },
+      dob: {
+        search: "",
+        start: 2153,
+        end: 2436,
+        line: 1
+      },
+      cast: {
+        search: "",
+        start: 2400,
+        end: 2481,
+        line: 1
+      },
+      sub1: {
+        search: "",
+        start: 2461,
+        end: 2799,
+        line: 1
+      },
+      sub2: {
+        search: "",
+        start: 2766,
+        end: 3040,
+        line: 1
+      },
+      sub3: {
+        search: "",
+        start: 3020,
+        end: 3284,
+        line: 1
+      },
+      sub4: {
+        search: "",
+        start: 3264,
+        end: 3529,
+        line: 1
+      },
+      sub5: {
+        search: "",
+        start: 3494,
+        end: 3756,
+        line: 1
+      },
+      sub6: {
+        search: "",
+        start: 3736,
+        end: 4071,
+        line: 1
+      },
+      total: {
+        search: "",
+        start: 3956,
+        end: 4154,
+        line: 1
+      },
+
+      result: {
+        search: "",
+        start: 4165,
+        end: 4210,
+        line: 1
+      },
+      percentage: {
+        search: "%",
+        start: 3923,
+        end: 4154
+      },
+    },
+    line2: {
+      fatherName: {
+        search: "",
+        start: 868,
+        end: 2173,
+        line: 2
+      },
+      result: {
+        search: "",
+        start: 4165,
+        end: 4210,
+        line: 2
+      },
+      percentage: {
+        search: "%",
+        start: 3923,
+        end: 4154
+      },
+    },
+    line3: {
+      motherName: {
+        search: "",
+        start: 886,
+        end: 2173,
+        line: 3
+      },
+      result: {
+        search: "",
+        start: 4165,
+        end: 4210,
+        line: 3
+      },
+      schoolId2: {
+        search: "",
+        start: 410,
+        end: 906,
+        line: 3
+      },
+
+      mark1: {
+        search: "",
+        start: 2461,
+        end: 2799,
+        line: 3
+      },
+      mark2: {
+        search: "",
+        start: 2779,
+        end: 3040,
+        line: 3
+      },
+      mark3: {
+        search: "",
+        start: 3010,
+        end: 3284,
+        line: 3
+      },
+      mark4: {
+        search: "",
+        start: 3264,
+        end: 3529,
+        line: 3
+      },
+      mark5: {
+        search: "",
+        start: 3509,
+        end: 3756,
+        line: 3
+      },
+      mark6: {
+        search: "",
+        start: 3736,
+        end: 3976,
+        line: 3
+      },
+      percentage: {
+        search: "%",
+        start: 3923,
+        end: 4154
+      }
+    },
+    line4: {
+      percentage: {
+        search: "%",
+        start: 3923,
+        end: 4154
+      }
+    }
+  }
 
   public compareJSON(detectedJson, jsonToCompare) {
     this.writeToFile("******************************************************************\n\nFile Name :-  File  \n\n******************************************************************\n", 'mismatch.txt');
@@ -105,5 +288,81 @@ export class AppService {
     );
     const detections = result.textAnnotations;
     return detections;
+  }
+
+  async makeReadableJSON(detections) {
+    let jsonData = [];
+    let currentLine = 1;
+    let lineHeight = 40;
+    let recordStartPixel = 0;
+    let json = {};
+    let isFirstLine = true;
+    for (let i = 0; i < detections.length; i++) {
+      for (let j = i + 1; j < detections.length; j++) {
+        if (detections[i].boundingPoly.vertices[0].y > detections[j].boundingPoly.vertices[0].y) {
+          let tmp = detections[i];
+          detections[i] = detections[j];
+          detections[j] = tmp;
+        }
+      }
+    }
+
+
+    for (let [index, data] of detections.entries()) {
+      if (data.boundingPoly.vertices[0].y < 270) {
+        continue;
+      }
+      if (isFirstLine) {
+        currentLine = 1;
+        isFirstLine = false;
+        json = {};
+        recordStartPixel = data.boundingPoly.vertices[0].y;
+      } else {
+        if (data.boundingPoly.vertices[0].y > (recordStartPixel + (lineHeight * 5))) {
+          currentLine = 1;
+          jsonData.push(json);
+          json = {};
+          recordStartPixel = data.boundingPoly.vertices[0].y;
+        }
+      }
+      if (data.boundingPoly.vertices[0].y > (recordStartPixel + (lineHeight * 3))) {
+        currentLine = 4;
+      } else if (data.boundingPoly.vertices[0].y > (recordStartPixel + (lineHeight * 2))) {
+        currentLine = 3;
+      } else if (data.boundingPoly.vertices[0].y > (recordStartPixel + (lineHeight * 1))) {
+        currentLine = 2;
+      } else {
+        currentLine = 1;
+      }
+      console.log(currentLine);
+      let fieldName = `line${currentLine}`;
+      for (let key in this.plottingPoints[fieldName]) {
+        // console.log(key)
+        if (data.boundingPoly.vertices[0].x >= this.plottingPoints[fieldName][key].start && data.boundingPoly.vertices[1].x <= this.plottingPoints[fieldName][key].end) {
+          console.log("Condition pass");
+          if (key == "percentage") {
+            console.log(this.plottingPoints[fieldName][key].search)
+            if (data.description.includes(this.plottingPoints[fieldName][key].search)) {
+              if (json[key]) {
+                json[key] += data.description;
+              } else {
+                json[key] = data.description;
+              }
+            } else {
+              continue;
+            }
+          } else {
+            if (json[key]) {
+              json[key] += data.description;
+            } else {
+              json[key] = data.description;
+            }
+          }
+        }
+      }
+    }
+    jsonData.push(json);
+
+    return jsonData;
   }
 }

@@ -42,7 +42,7 @@ export class AppController {
 
   @Post()
   @UseInterceptors(
-    FileInterceptor("avatar", {
+    FileInterceptor("file", {
       storage: diskStorage({
         destination: "./avatars",
         filename: (req, file, cb) => {
@@ -57,6 +57,7 @@ export class AppController {
   )
   async uploadFile(@UploadedFile() file) {
     console.log(file);
+
     const vision = require("@google-cloud/vision");
     const client = new vision.ImageAnnotatorClient();
     const [result] = await client.textDetection(
@@ -64,9 +65,8 @@ export class AppController {
       //'https://cloud.google.com/vision/docs/images/sign_text.png'
     );
     const detections = result.textAnnotations;
-    console.log("Text:");
-    detections.forEach(text => console.log(text));
-    this.appService.compareJSON(detections, this.comparableJson[0]);
+    const json = await this.appService.makeReadableJSON(detections);
+    // this.appService.compareJSON(detections, this.comparableJson[0]);
 
     // /** Node Tesseract code */
 
@@ -81,7 +81,9 @@ export class AppController {
 
     // let text = await tesseract.recognize(join(__dirname, "..", "/avatars/" + file.filename), config)
 
-    return { status: 1, message: "Image uploaded successfully.", data: detections };
+    return { status: 1, message: "Image uploaded successfully.", data: json };
+    // return { status: 1, message: "Image uploaded successfully.", data: detections };
+
   }
 
 
