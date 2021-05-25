@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
-import { join } from 'path';
+import { basename, extname, join } from 'path';
+import * as decompress from "decompress";
 
 @Injectable()
 export class AppService {
@@ -237,7 +238,6 @@ export class AppService {
       // actualValue = actualValue.replace(' ', "");
       let actualPoints = this.plottingPoints[key];
       if (!actualPoints) {
-        console.log(key)
         continue;
       }
 
@@ -264,7 +264,6 @@ export class AppService {
         // if (key != "residentVC") {
         this.writeToFile(str, 'mismatch.txt');
         // }
-        console.log(str);
       } else {
         for (let index of indexToDelete) {
           //detectedJson.splice(index, 1);
@@ -334,14 +333,11 @@ export class AppService {
       } else {
         currentLine = 1;
       }
-      console.log(currentLine);
       let fieldName = `line${currentLine}`;
       for (let key in this.plottingPoints[fieldName]) {
         // console.log(key)
         if (data.boundingPoly.vertices[0].x >= this.plottingPoints[fieldName][key].start && data.boundingPoly.vertices[1].x <= this.plottingPoints[fieldName][key].end) {
-          console.log("Condition pass");
           if (key == "percentage") {
-            console.log(this.plottingPoints[fieldName][key].search)
             if (data.description.includes(this.plottingPoints[fieldName][key].search)) {
               if (json[key]) {
                 json[key] += data.description;
@@ -364,5 +360,29 @@ export class AppService {
     jsonData.push(json);
 
     return jsonData;
+  }
+
+  async processZipFile(file) {
+    let fileName = basename(file.filename, extname(file.filename));
+    let files = await decompress(join(__dirname, "..", file.path), join(__dirname, "..", `/results/${fileName}`));
+    global["filedata"][fileName] = {};
+    for (let fileData of files) {
+      if (fileData.type != "file") {
+        continue;
+      }
+      const vision = require("@google-cloud/vision");
+      const client = new vision.ImageAnnotatorClient();
+      const [result] = await client.textDetection(
+        join(__dirname, "..", "/results/" + fileName + "/" + fileData.path)
+        //'https://cloud.google.com/vision/docs/images/sign_text.png'
+      );
+      const detections = result.textAnnotations;
+      const json = await this.makeReadableJSON(detections);
+      global["filedata"][fileName][fileData.path] = {
+        data: json
+      };
+    }
+    fs.unlinkSync(join(__dirname, "..", file.path));
+    fs.unlinkSync(join(__dirname, "..", `/results/${fileName}`));
   }
 }

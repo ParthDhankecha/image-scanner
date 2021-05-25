@@ -9,5 +9,6 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, ".."));
   app.use(bodyParser.json({ limit: "50mb" }))
   await app.listen(4000);
+  global["filedata"] = {};
 }
 bootstrap();

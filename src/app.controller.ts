@@ -11,7 +11,7 @@ import { AppService } from "./app.service";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { diskStorage } from "multer";
 import { basename, extname, join } from "path";
-import * as decompress from "decompress";
+import { unlinkSync } from "fs";
 
 @Controller()
 export class AppController {
@@ -31,10 +31,10 @@ export class AppController {
   //   return this.appService.getHello();
   // }
 
-  @Get(':fileName')
-  getImageData(@Param() params) {
+  @Get('')
+  getImageData() {
 
-    return { data: global[params.fileName] }
+    return { data: global["filedata"] }
   }
 
   /**
@@ -48,7 +48,7 @@ export class AppController {
    * export google credential variable values then restart server and terminal
    */
 
-  @Post()
+  @Post('zip-upload')
   @UseInterceptors(
     FileInterceptor("file", {
       storage: diskStorage({
@@ -61,45 +61,42 @@ export class AppController {
     })
   )
   async uploadFile(@UploadedFile() file) {
-    console.log(file);
-
     let fileName = basename(file.filename, extname(file.filename));
-    let files = await decompress(join(__dirname, "..", file.path), join(__dirname, "..", `/results/${fileName}`));
-    global[fileName] = {};
-    for (let fileData of files) {
-      const vision = require("@google-cloud/vision");
-      const client = new vision.ImageAnnotatorClient();
-      const [result] = await client.textDetection(
-        join(__dirname, "..", "/results/" + fileName + "/" + fileData.path)
-        //'https://cloud.google.com/vision/docs/images/sign_text.png'
-      );
-      const detections = result.textAnnotations;
-      const json = await this.appService.makeReadableJSON(detections);
-      delete fileData.data
-      global[fileName][fileData.path] = {
-        data: json
-      };
-    }
+    this.appService.processZipFile(file);
 
     return { name: fileName }
-    // this.appService.compareJSON(detections, this.comparableJson[0]);
+  }
 
-    // /** Node Tesseract code */
+  @Post('image-upload')
+  @UseInterceptors(
+    FileInterceptor("file", {
+      storage: diskStorage({
+        destination: "./avatars",
+        filename: (req, file, cb) => {
 
-    // const tesseract = require("node-tesseract-ocr")
+          return cb(null, `${Date.now()}${extname(file.originalname)}`);
+        }
+      })
+    })
+  )
+  async uploadImageFile(@UploadedFile() file) {
+    console.log(file);
+    let fileName = basename(file.filename, extname(file.filename));
+    const vision = require("@google-cloud/vision");
+    const client = new vision.ImageAnnotatorClient();
+    const [result] = await client.textDetection(
+      join(__dirname, "..", "/avatars/" + file.filename)
+      //'https://cloud.google.com/vision/docs/images/sign_text.png'
+    );
+    const detections = result.textAnnotations;
+    const json = await this.appService.makeReadableJSON(detections);
+    global["filedata"][fileName] = {};
+    global["filedata"][fileName][fileName] = {
+      data: json
+    };
+    unlinkSync(join(__dirname, "..", "/avatars/" + file.filename));
 
-    // const config = {
-    //   lang: "eng",
-    //   oem: 1,
-    //   psm: 3,
-    //   json: 1
-    // }
-
-    // let text = await tesseract.recognize(join(__dirname, "..", "/avatars/" + file.filename), config)
-
-    // return { status: 1, message: "Image uploaded successfully.", data: json };
-    // return { status: 1, message: "Image uploaded successfully.", data: detections };
-
+    return { data: json };
   }
 
 
