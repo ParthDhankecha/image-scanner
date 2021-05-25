@@ -4,12 +4,14 @@ import {
   Post,
   UseInterceptors,
   UploadedFile,
-  Body
+  Body,
+  Param
 } from "@nestjs/common";
 import { AppService } from "./app.service";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { diskStorage } from "multer";
-import { extname, join } from "path";
+import { basename, extname, join } from "path";
+import * as decompress from "decompress";
 
 @Controller()
 export class AppController {
@@ -24,9 +26,15 @@ export class AppController {
     { "homeName": "EDEN - Eden House Care Home", "homePhone": "1-519-856-4622", "homeFax": "1-519-856-1274", "pharmacyPhone": "1-844-316-7369", "pharmacyFax": "1-844-343-7369", "homeAreaName": "Wellington", "residentName": "Bates, Elizabeth", "prescriberName": "Karaul, Ameet", "unit": "Wellington", "room": "W2", "allergies": "Penicillins", "prescriberLicense": "105079", "residentDOB": "09/24/1940", "residentVC": "-", "residentHC": "3809543295", "currentDate": "12/30/2019", "currentTime": "15:52", "crushedMedsYes": "No", "crushedMedsNo": "Yes", "status": "EDITED", "orderNo": "Rx002213", "chkStartWithNextMedStrip": "", "orderType": "", "1stCheckName": "Peggy  Knox", "1stCheckDateTime": "12/30/2019, 15:53" }
   ];
 
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  // @Get()
+  // getHello() {
+  //   return this.appService.getHello();
+  // }
+
+  @Get(':fileName')
+  getImageData(@Param() params) {
+
+    return { data: global[params.fileName] }
   }
 
   /**
@@ -46,11 +54,8 @@ export class AppController {
       storage: diskStorage({
         destination: "./avatars",
         filename: (req, file, cb) => {
-          const randomName = Array(32)
-            .fill(null)
-            .map(() => Math.round(Math.random() * 16).toString(16))
-            .join("");
-          return cb(null, `${randomName}${extname(file.originalname)}`);
+
+          return cb(null, `${Date.now()}${extname(file.originalname)}`);
         }
       })
     })
@@ -58,14 +63,25 @@ export class AppController {
   async uploadFile(@UploadedFile() file) {
     console.log(file);
 
-    const vision = require("@google-cloud/vision");
-    const client = new vision.ImageAnnotatorClient();
-    const [result] = await client.textDetection(
-      join(__dirname, "..", "/avatars/" + file.filename)
-      //'https://cloud.google.com/vision/docs/images/sign_text.png'
-    );
-    const detections = result.textAnnotations;
-    const json = await this.appService.makeReadableJSON(detections);
+    let fileName = basename(file.filename, extname(file.filename));
+    let files = await decompress(join(__dirname, "..", file.path), join(__dirname, "..", `/result/${fileName}`));
+    global[fileName] = {};
+    for (let fileData of files) {
+      const vision = require("@google-cloud/vision");
+      const client = new vision.ImageAnnotatorClient();
+      const [result] = await client.textDetection(
+        join(__dirname, "..", "/results/" + fileName + "/" + fileData.path)
+        //'https://cloud.google.com/vision/docs/images/sign_text.png'
+      );
+      const detections = result.textAnnotations;
+      const json = await this.appService.makeReadableJSON(detections);
+      delete fileData.data
+      global[fileName][fileData.path] = {
+        data: json
+      };
+    }
+
+    return { name: fileName }
     // this.appService.compareJSON(detections, this.comparableJson[0]);
 
     // /** Node Tesseract code */
@@ -81,7 +97,7 @@ export class AppController {
 
     // let text = await tesseract.recognize(join(__dirname, "..", "/avatars/" + file.filename), config)
 
-    return { status: 1, message: "Image uploaded successfully.", data: json };
+    // return { status: 1, message: "Image uploaded successfully.", data: json };
     // return { status: 1, message: "Image uploaded successfully.", data: detections };
 
   }
