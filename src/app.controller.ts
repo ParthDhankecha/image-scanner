@@ -64,7 +64,7 @@ export class AppController {
     console.log(file);
 
     let fileName = basename(file.filename, extname(file.filename));
-    let files = await decompress(join(__dirname, "..", file.path), join(__dirname, "..", `/result/${fileName}`));
+    let files = await decompress(join(__dirname, "..", file.path), join(__dirname, "..", `/results/${fileName}`));
     global[fileName] = {};
     for (let fileData of files) {
       const vision = require("@google-cloud/vision");
